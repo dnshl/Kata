@@ -1,0 +1,43 @@
+#!/bin/sh
+
+SESSION="kata"
+TMUX_FILE=".tmuxrc"
+LOG_FILE="log/development.log"
+
+# Create log file
+if [ -f $LOG_FILE ]
+  then touch $LOG_FILE
+fi
+
+# Start tmux server if it is not already running
+tmux start-server
+
+# Create a new session and run vim in it's first window
+tmux new-session -d -s $SESSION "vim"
+
+# Split pane 1 horizontal by 65%, and select new pane
+#tmux splitw -h -p 35
+tmux splitw -h -p 35 "bundle exec guard"
+
+# Split pane 1 horizontal by 65%, and select new pane
+tmux splitw -v -p 5 "tail -f $LOG_FILE"
+
+# Select pane 1
+tmux selectp -t 1
+
+# Split pane 1 horizontal by 65%, and select new pane
+tmux splitw -v -p 5 "bin/console"
+tmux send-keys "shell-mode" C-m
+tmux send-keys C-L # clear
+
+# Create a new window in our session
+#tmux new-window -t $SESSION "bundle exec guard"
+
+# Return to main vim window
+#tmux select-window -t $SESSION:0
+
+# Attach to the tmux session
+tmux attach-session -t $SESSION
+
+#tmux source-file "$TMUX_FILE"
+
