@@ -1,5 +1,6 @@
 require 'kata/logging'
 require 'kata/version'
+require 'singleton'
 
 # Write a roman numerals converter. It should accept roman numerals as strings
 # as well as arabic numbers as integers. There is no need to instantiate a new
@@ -75,5 +76,77 @@ require 'kata/version'
 module Kata
   class Error < StandardError; end
   # Your code goes here...
+  class Converter
+    include Logging
+    include Singleton
+
+    GLYPHS = {
+       'M' => 1000,
+      'CM' => 900,
+       'D' => 500,
+      'CD' => 400,
+       'C' => 100,
+      'XC' => 90,
+       'L' => 50,
+      'XL' => 40,
+       'X' => 10,
+      'IX' => 9,
+       'V' => 5,
+      'IV' => 4,
+       'I' => 1
+    }
+
+    def convert(number)
+      if number.is_a? String
+        convert_roman(number)
+      else
+        convert_arabic(number)
+      end
+    end
+
+    private
+
+    def convert_arabic(number)
+      if number < 0
+        '-' + convert_positive_arabic(-number)
+      else
+        convert_positive_arabic(number)
+      end
+    end
+
+    def convert_roman(number)
+      if number =~ /^-/
+        -convert_positive_roman(number[1..-1])
+      else
+        convert_positive_roman(number)
+      end
+    end
+
+    def value_for(ch)
+      GLYPHS[ch] || 0
+    end
+
+    def convert_positive_roman(number)
+      result = 0
+      number.each_char.with_index do |ch, index|
+        value = value_for(ch)
+        next_value = value_for(number[index+1])
+        result += value < next_value ? -value : value
+      end
+      result
+    end
+
+    def convert_positive_arabic(number)
+      result = ''
+      GLYPHS.each do |glyph, limit|
+        while number >= limit
+          result << glyph
+          number -= limit
+        end
+      end
+      result
+    end
+
+  end
 end
 
